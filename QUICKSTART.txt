@@ -1,0 +1,108 @@
+┌─────────────────────────────────────────────────────────────┐
+│              CoachLink360 - Quick Reference                 │
+└─────────────────────────────────────────────────────────────┘
+
+🌐 SERVICE RUNNING ON: http://localhost:3001
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📍 ENDPOINTS
+
+  POST /api/webhook          → Receive meeting data
+  GET  /api/webhook          → Test/info endpoint
+  GET  /api/survey/:token    → Display survey form
+  POST /api/survey/:token    → Submit survey response
+  GET  /health               → Health check
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ QUICK COMMANDS
+
+  # Start services
+  docker-compose up -d
+
+  # View logs
+  docker-compose logs -f app
+
+  # Restart after .env changes
+  docker-compose restart app
+
+  # Stop everything
+  docker-compose down
+
+  # Run test script
+  ./test-webhook.sh
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔑 NEXT STEPS
+
+  1. Get API key: https://resend.com/api-keys
+  
+  2. Edit .env file:
+     RESEND_API_KEY=re_your_key_here
+  
+  3. Restart: docker-compose restart app
+  
+  4. Test webhook:
+     curl -X POST http://localhost:3001/api/webhook \
+       -H "Content-Type: application/json" \
+       -d '{"session_id":"test","title":"Test Meeting",
+            "participants":[{"name":"You","email":"your@email.com"}]}'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 DATABASE QUERIES
+
+  # Connect to database
+  docker-compose exec db psql -U postgres -d coachlink360
+
+  # View tables
+  \dt
+
+  # View meetings
+  SELECT * FROM meetings;
+
+  # View survey invites
+  SELECT * FROM survey_invites;
+
+  # View responses
+  SELECT * FROM survey_responses;
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 PROJECT STRUCTURE
+
+  src/
+    ├── index.js              # Main server
+    ├── routes/
+    │   ├── webhook.js        # Webhook endpoint
+    │   └── survey.js         # Survey endpoints
+    ├── services/
+    │   └── emailService.js   # Resend integration
+    └── db/
+        ├── index.js          # Database connection
+        └── migrate.js        # Database schema
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✨ FEATURES IMPLEMENTED
+
+  ✓ Flexible webhook (accepts any JSON)
+  ✓ PostgreSQL with JSONB storage
+  ✓ Automated survey emails via Resend
+  ✓ Beautiful HTML email template
+  ✓ Interactive web survey form
+  ✓ 5 rating questions + 2 open questions
+  ✓ Response validation & storage
+  ✓ Docker containerization
+  ✓ Rate limit handling
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 DOCUMENTATION
+
+  README.md  - Project overview
+  SETUP.md   - Detailed setup guide
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
