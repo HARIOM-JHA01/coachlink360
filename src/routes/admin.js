@@ -18,6 +18,23 @@ function requireAdmin(req, res, next) {
 // Query params: page (default 1), limit (default 50), q (search by email or meeting title)
 router.get("/responses", async (req, res) => {
   try {
+    // If an id query parameter is provided, return a single response (compatibility for View button)
+    const id = req.query.id;
+    if (id) {
+      const query = `
+        SELECT sr.*, si.participant_email, si.participant_name, m.id as meeting_id, m.meeting_data
+        FROM survey_responses sr
+        JOIN survey_invites si ON sr.survey_invite_id = si.id
+        JOIN meetings m ON si.meeting_id = m.id
+        WHERE sr.id = $1
+        LIMIT 1`;
+
+      const result = await db.query(query, [id]);
+      if (result.rows.length === 0)
+        return res.status(404).json({ success: false, error: "Not found" });
+      return res.json({ success: true, result: result.rows[0] });
+    }
+
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200);
     const offset = (page - 1) * limit;
@@ -76,8 +93,8 @@ router.get("/responses", async (req, res) => {
   }
 });
 
-// Admin page: GET /admin/responses
-router.get("/responses", async (req, res) => {
+// Admin page: GET /admin/
+router.get("/", async (req, res) => {
   // Simple HTML page that uses fetch to call API and render
   res.send(`
   <!doctype html>
@@ -130,7 +147,6 @@ router.get("/responses", async (req, res) => {
         async function fetchPage() {
           const q = qInput.value.trim();
           const token = new URLSearchParams(location.search).get('token') || '';
-          const token = new URLSearchParams(location.search).get('token') || '';
           // Build URL with plain string concatenation to avoid nested template literals
           const url = '/api/admin/responses?page=' + page + '&limit=' + limit + (q ? '&q=' + encodeURIComponent(q) : '') + (token ? '&token=' + encodeURIComponent(token) : '');
           const res = await fetch(url, { headers: token ? { 'x-admin-token': token } : {} });
@@ -160,7 +176,6 @@ router.get("/responses", async (req, res) => {
           document.querySelectorAll('#results button[data-id]').forEach(btn => {
             btn.addEventListener('click', async (e) => {
               const id = btn.getAttribute('data-id');
-              const token = new URLSearchParams(location.search).get('token') || '';
               const token = new URLSearchParams(location.search).get('token') || '';
               const url = '/api/admin/responses?id=' + id + (token ? '&token=' + encodeURIComponent(token) : '');
               const res = await fetch(url, { headers: token ? { 'x-admin-token': token } : {} });
@@ -193,30 +208,6 @@ router.get("/responses", async (req, res) => {
     </body>
   </html>
   `);
-});
-
-// Support fetching a single response by id: GET /api/admin/responses?id=123
-router.get("/responses", async (req, res) => {
-  const id = req.query.id;
-  if (!id) return res.status(400).json({ success: false, error: "Missing id" });
-
-  try {
-    const query = `
-      SELECT sr.*, si.participant_email, si.participant_name, m.id as meeting_id, m.meeting_data
-      FROM survey_responses sr
-      JOIN survey_invites si ON sr.survey_invite_id = si.id
-      JOIN meetings m ON si.meeting_id = m.id
-      WHERE sr.id = $1
-      LIMIT 1`;
-
-    const result = await db.query(query, [id]);
-    if (result.rows.length === 0)
-      return res.status(404).json({ success: false, error: "Not found" });
-    res.json({ success: true, result: result.rows[0] });
-  } catch (err) {
-    console.error("Error fetching single response:", err);
-    res.status(500).json({ success: false, error: "Failed to fetch response" });
-  }
 });
 
 module.exports = router;
